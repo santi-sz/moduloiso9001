@@ -24,6 +24,7 @@ const NonConformityForm = () => {
   const [tipoBase, setTipoBase] = useState(null);
   const [tipoOrigen, setTipoOrigen] = useState(null);
   const [animacion] = useState(new Animated.Value(0));
+  const [errors, setErrors] = useState({});
 
   const [fontsLoaded] = useFonts({
     'Roboto-Regular': require('../assets/fonts/Roboto-Regular.ttf'),
@@ -48,12 +49,24 @@ const NonConformityForm = () => {
     return null;
   }
 
-  const handleSubmit = () => {
-    // Aquí puedes manejar el envío del formulario
-    console.log('Formulario enviado');
-    Alert.alert('No Conformidad','Formulario enviado');
+  const validateForm = () => {
+    const newErrors = {};
+    if (!cliente) newErrors.cliente = 'El nombre es obligatorio';
+    if (!seccion) newErrors.seccion = 'La sección es obligatoria';
+    if (!subseccion) newErrors.subseccion = 'La subsección es obligatoria';
+    if (!formaDeteccion) newErrors.formaDeteccion = 'La forma de detección es obligatoria';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmit = () => {
+    if (validateForm()) {
+      console.log('Formulario enviado');
+      Alert.alert('No Conformidad', 'Formulario enviado');
+    } else {
+      Alert.alert('No Conformidad', 'Por favor, complete todos los campos obligatorios');
+    }
+  };
 
   const secciones = [
     'Fábrica de alimentos',
@@ -160,6 +173,7 @@ const NonConformityForm = () => {
           onChange={(item) => setTipoOrigen(item.value)}
         />
       )}
+      {errors.cliente && <Text style={styles.errorText}>{errors.cliente}</Text>}
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Enviar Formulario</Text>
       </TouchableOpacity>
@@ -225,5 +239,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontFamily: 'Roboto-Regular', // Cambia la fuente a Roboto
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
   },
 });
