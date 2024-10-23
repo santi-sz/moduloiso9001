@@ -15,15 +15,14 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 200,
+    paddingTop: 140,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
   },
   title:{
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
   }
 });

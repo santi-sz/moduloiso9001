@@ -23,6 +23,9 @@ const NonConformityForm = () => {
   const [formaDeteccion, setFormaDeteccion] = useState(null);
   const [tipoBase, setTipoBase] = useState(null);
   const [tipoOrigen, setTipoOrigen] = useState(null);
+  const [tipoError, setTipoError] = useState(null);
+  const [tipoErrorEncontrado, setTipoErrorEncontrado] = useState(null);
+  const [lote, setLote] = useState('');
   const [animacion] = useState(new Animated.Value(0));
   const [errors, setErrors] = useState({});
 
@@ -102,11 +105,18 @@ const NonConformityForm = () => {
     'Sugerencia de Mejora',
   ];
 
-  const tiposBase = ['Producto', 'Proceso'];
+  const tiposBase = ['Producto/Materia prima', 'Proceso'];
 
   const tiposOrigenPorBase = {
-    Producto: ['Materia Prima'],
-    Proceso: ['Mano de Obra', 'Métodos', 'Maquinaria', 'Infraestructura', 'Servicios', 'Medio Ambiente', 'Higiene y Seguridad', 'Transporte'],
+    'Producto/Materia prima': ['Materia Prima', 'Producto'],
+    'Proceso': ['Mano de Obra', 'Métodos', 'Maquinaria', 'Infraestructura', 'Servicios', 'Medio Ambiente', 'Higiene y Seguridad', 'Transporte'],
+  };
+
+  const tiposOrigenError = ['Materia Prima', 'Producto'];
+
+  const productos_materiaprima = {
+    'Materia Prima': ['Materia Prima 1', 'Materia Prima 2', 'Materia Prima 3', 'Materia Prima 4', 'Materia Prima 5'],
+    'Producto': ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5'],
   };
 
   const handleSeccionChange = (value) => {
@@ -173,10 +183,32 @@ const NonConformityForm = () => {
           onChange={(item) => setTipoOrigen(item.value)}
         />
       )}
-      {errors.cliente && <Text style={styles.errorText}>{errors.cliente}</Text>}
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Enviar Formulario</Text>
-      </TouchableOpacity>
+      {tipoOrigen && (
+      <Dropdown
+        style={styles.dropdown}
+        data={productos_materiaprima[tipoOrigen].map((item) => ({ label: item, value: item }))}
+        labelField="label"
+        valueField="value"
+        placeholder='Seleccione producto/materia prima'
+        value={tipoError}
+        onChange={(item) => setTipoError(item.value)}
+      /> 
+      )}
+      {tipoError === "Producto" && (
+      <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
+      <TextInput
+        style={styles.input}
+        placeholder="Ingrese el número de lote"
+        value={lote}
+        onChangeText={setLote}
+      />
+      </Animated.View>
+      )}
+
+    {errors.cliente && <Text style={styles.errorText}>{errors.cliente}</Text>}
+    <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+      <Text style={styles.buttonText}>Enviar Formulario</Text>
+    </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -185,9 +217,9 @@ export default NonConformityForm;
 
 const styles = StyleSheet.create({
   container: {
-    width: '120%',
+    width: '115%',
     flex: 1,
-    padding: 45,
+    padding: 40,
     backgroundColor: '#fff',
     fontFamily: 'Roboto-Regular',
   },
@@ -242,7 +274,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
-    fontSize: 12,
+    fontSize: 16,
     marginTop: 5,
   },
 });
