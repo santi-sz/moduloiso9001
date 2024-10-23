@@ -6,7 +6,7 @@ import NonConformityForm from './components/form_users'; // Asegúrate de que la
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Formulario de No conformidad</Text>
+      <Text style={styles.title}>Formulario de No conformidad</Text>
       <NonConformityForm/>
     </View>
   );
@@ -15,10 +15,15 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ddd",
+    paddingTop: 200,
+    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
-    gap: 10,
   },
+  title:{
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  }
 });
