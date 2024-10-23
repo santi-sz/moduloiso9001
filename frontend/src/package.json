@@ -23,6 +23,7 @@
     "react-native-animatable": "^1.4.0",
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-element-dropdown": "^2.12.2",
+    "react-native-image-crop-picker": "^0.41.4",
     "react-native-picker": "^4.3.7",
     "react-native-picker-select": "^9.3.1",
     "react-native-tailwindcss": "^1.1.11",

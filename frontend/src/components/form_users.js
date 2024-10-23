@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Animated,
   ScrollView,
+  Button,
+  Alert,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useFonts } from 'expo-font';
@@ -46,6 +48,11 @@ const NonConformityForm = () => {
     return null;
   }
 
+  const handleSubmit = () => {
+    // Aquí puedes manejar el envío del formulario
+    console.log('Formulario enviado');
+    Alert.alert('No Conformidad','Formulario enviado');
+  };
 
 
   const secciones = [
@@ -153,6 +160,9 @@ const NonConformityForm = () => {
           onChange={(item) => setTipoOrigen(item.value)}
         />
       )}
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>Enviar Formulario</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
