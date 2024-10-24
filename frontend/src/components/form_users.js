@@ -14,6 +14,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
+
 SplashScreen.preventAutoHideAsync();
 
 const NonConformityForm = () => {
@@ -24,9 +25,11 @@ const NonConformityForm = () => {
   const [tipoBase, setTipoBase] = useState(null);
   const [tipoOrigen, setTipoOrigen] = useState(null);
   const [tipoError, setTipoError] = useState(null);
-  const [tipoErrorEncontrado, setTipoErrorEncontrado] = useState(null);
   const [lote, setLote] = useState('');
+  const [atributo, setAtributo] = useState('');
+  const	[resultado, setResultado] = useState('');
   const [animacion] = useState(new Animated.Value(0));
+  const [nc, setNc] = useState('');
   const [errors, setErrors] = useState({});
 
   const [fontsLoaded] = useFonts({
@@ -105,19 +108,40 @@ const NonConformityForm = () => {
     'Sugerencia de Mejora',
   ];
 
-  const tiposBase = ['Producto/Materia prima', 'Proceso'];
+  const tiposBase = ['Producto', 'Proceso'];
 
   const tiposOrigenPorBase = {
-    'Producto/Materia prima': ['Materia Prima', 'Producto'],
+    'Producto': ['Materia Prima'],
     'Proceso': ['Mano de Obra', 'Métodos', 'Maquinaria', 'Infraestructura', 'Servicios', 'Medio Ambiente', 'Higiene y Seguridad', 'Transporte'],
   };
 
-  const tiposOrigenError = ['Materia Prima', 'Producto'];
 
   const productos_materiaprima = {
-    'Materia Prima': ['Materia Prima 1', 'Materia Prima 2', 'Materia Prima 3', 'Materia Prima 4', 'Materia Prima 5'],
-    'Producto': ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5'],
+    'Materia Prima': ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5'],
   };
+
+  const atributos_producto = [
+    'Cantidad',
+    'Calidad',
+    'Ph',
+    'Dimensión',
+    'Peso',
+    'Sabor',
+    'Humedad',
+    'Olor',
+  ];
+
+  const resultados_posibles = [
+  'Aceptado',
+  'Aceptado con observación',
+  'Rechazado',
+  ];
+
+  const nc_posibles = [
+    'Grave',
+    'Urgente',
+    'Menor',
+  ];
 
   const handleSeccionChange = (value) => {
     setSeccion(value);
@@ -129,7 +153,7 @@ const NonConformityForm = () => {
       <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
         <TextInput
           style={styles.input}
-          placeholder="Ingrese su nombre"
+          placeholder="Ingrese su nombre..."
           value={cliente}
           onChangeText={setCliente}
         />
@@ -139,7 +163,7 @@ const NonConformityForm = () => {
         data={secciones.map((item) => ({ label: item, value: item }))}
         labelField="label"
         valueField="value"
-        placeholder="Seleccione una sección"
+        placeholder="Seleccione una sección..."
         value={seccion}
         onChange={(item) => handleSeccionChange(item.value)}
       />
@@ -149,7 +173,7 @@ const NonConformityForm = () => {
           data={subseccionesPorSeccion[seccion].map((item) => ({ label: item, value: item }))}
           labelField="label"
           valueField="value"
-          placeholder="Seleccione una subsección"
+          placeholder="Seleccione una subsección..."
           value={subseccion}
           onChange={(item) => setSubseccion(item.value)}
         />
@@ -159,7 +183,7 @@ const NonConformityForm = () => {
         data={formasDeteccion.map((item) => ({ label: item, value: item }))}
         labelField="label"
         valueField="value"
-        placeholder="Seleccione una forma de detección"
+        placeholder="Seleccione una forma de detección..."
         value={formaDeteccion}
         onChange={(item) => setFormaDeteccion(item.value)}
       />
@@ -168,7 +192,7 @@ const NonConformityForm = () => {
         data={tiposBase.map((item) => ({ label: item, value: item }))}
         labelField="label"
         valueField="value"
-        placeholder="Seleccione un tipo base"
+        placeholder="Seleccione un tipo base..."
         value={tipoBase}
         onChange={(item) => setTipoBase(item.value)}
       />
@@ -178,37 +202,76 @@ const NonConformityForm = () => {
           data={tiposOrigenPorBase[tipoBase].map((item) => ({ label: item, value: item }))}
           labelField="label"
           valueField="value"
-          placeholder="Seleccione un tipo de origen"
+          placeholder="Seleccione un tipo de origen..."
           value={tipoOrigen}
           onChange={(item) => setTipoOrigen(item.value)}
         />
       )}
+
+      {tipoBase == "Producto/Materia prima" && (
+      <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
+        <TextInput
+          style={styles.input}
+          placeholder="Ingrese el número de lote..."
+          value={lote}
+          onChangeText={setLote}
+        />
+      </Animated.View>
+      )}
+
       {tipoOrigen && (
       <Dropdown
         style={styles.dropdown}
         data={productos_materiaprima[tipoOrigen].map((item) => ({ label: item, value: item }))}
         labelField="label"
         valueField="value"
-        placeholder='Seleccione producto/materia prima'
+        placeholder='Seleccione producto...'
         value={tipoError}
         onChange={(item) => setTipoError(item.value)}
-      /> 
-      )}
-      {tipoError === "Producto" && (
-      <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
-      <TextInput
-        style={styles.input}
-        placeholder="Ingrese el número de lote"
-        value={lote}
-        onChangeText={setLote}
       />
-      </Animated.View>
+      )}
+
+      {tipoOrigen && (
+      <Dropdown
+        style={styles.dropdown}
+        data={atributos_producto.map((item) => ({ label: item, value: item }))}
+        labelField="label"
+        valueField="value"
+        placeholder='Seleccione atributo...'
+        value={atributo}
+        onChange={(item) => setAtributo(item.value)}
+      />
+      )}
+
+      {tipoOrigen && (
+      <Dropdown
+        style={styles.dropdown}
+        data={resultados_posibles.map((item) => ({ label: item, value: item }))}
+        labelField="label"
+        valueField="value"
+        placeholder='Seleccione resultado...'
+        value={resultado}
+        onChange={(item) => setResultado(item.value)}
+      />
+      )}
+
+      {tipoOrigen && (
+      <Dropdown
+        style={styles.dropdown}
+        data={nc_posibles.map((item) => ({ label: item, value: item }))}
+        labelField="label"
+        valueField="value"
+        placeholder='Seleccione estado...'
+        value={nc}
+        onChange={(item) => setNc(item.value)}
+      />
       )}
 
     {errors.cliente && <Text style={styles.errorText}>{errors.cliente}</Text>}
     <TouchableOpacity style={styles.button} onPress={handleSubmit}>
       <Text style={styles.buttonText}>Enviar Formulario</Text>
     </TouchableOpacity>
+
     </ScrollView>
   );
 };
