@@ -64,6 +64,14 @@ const NonConformityForm = () => {
     if (!seccion) newErrors.seccion = 'La sección es obligatoria';
     if (!subseccion) newErrors.subseccion = 'La subsección es obligatoria';
     if (!formaDeteccion) newErrors.formaDeteccion = 'La forma de detección es obligatoria';
+    if (!tipoBase) newErrors.tipoBase = 'El tipo base es obligatorio';
+    if (!tipoOrigen) newErrors.tipoOrigen = 'El tipo de origen es obligatorio';
+    if (!lote) newErrors.lote = 'El número de lote es obligatorio';
+    if (!atributo) newErrors.atributo = 'El atributo es obligatorio';
+    if (!resultado) newErrors.resultado = 'El resultado es obligatorio';
+    if (!nc) newErrors.nc = 'El estado es obligatorio';
+    if (!proceso) newErrors.proceso = 'El subproceso es obligatorio';
+    if (!accion) newErrors.accion = 'La acción es obligatoria';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
