@@ -8,16 +8,18 @@ export default function App() {
     <ScrollView>
     <View style={styles.container}>
       <Text style={styles.title}>Formulario de No conformidad</Text>
+      <View style={styles.underline} />
       <NonConformityForm/>
     </View>
     </ScrollView>
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 100,
+    paddingTop: 120,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
@@ -26,5 +28,10 @@ const styles = StyleSheet.create({
   title:{
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  underline:{
+    borderBottomColor: '#2E8B57',
+    borderBottomWidth: 2,
+    width: '95%',
   }
 });

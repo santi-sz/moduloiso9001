@@ -31,6 +31,9 @@ const NonConformityForm = () => {
   const [animacion] = useState(new Animated.Value(0));
   const [nc, setNc] = useState('');
   const [errors, setErrors] = useState({});
+  const [proceso, setProceso] = useState('');
+  const [accion, setAccion] = useState('');
+
 
   const [fontsLoaded] = useFonts({
     'Roboto-Regular': require('../assets/fonts/Roboto-Regular.ttf'),
@@ -111,25 +114,17 @@ const NonConformityForm = () => {
   const tiposBase = ['Producto', 'Proceso'];
 
   const tiposOrigenPorBase = {
-    'Producto': ['Materia Prima'],
+    'Producto': ['Materia prima'],
     'Proceso': ['Mano de Obra', 'Métodos', 'Maquinaria', 'Infraestructura', 'Servicios', 'Medio Ambiente', 'Higiene y Seguridad', 'Transporte'],
   };
 
 
-  const productos_materiaprima = {
-    'Materia Prima': ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5'],
-  };
+  const productos_materiaprima = ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5'];
 
-  const atributos_producto = [
-    'Cantidad',
-    'Calidad',
-    'Ph',
-    'Dimensión',
-    'Peso',
-    'Sabor',
-    'Humedad',
-    'Olor',
-  ];
+  const atributos = {
+    'Producto': ['Cantidad','Calidad','Ph','Dimensión','Peso','Sabor','Humedad','Olor'],
+    'Proceso': ['Plazo entrega','Humedad','Higiene','Seguridad','Temperatura'],
+  };
 
   const resultados_posibles = [
   'Aceptado',
@@ -137,11 +132,24 @@ const NonConformityForm = () => {
   'Rechazado',
   ];
 
-  const nc_posibles = [
-    'Grave',
-    'Urgente',
-    'Menor',
+  const nc_posibles = {
+    'Producto': ['Grave','Urgente','Menor'],
+    'Proceso': ['Grave','Urgente','Menor'],
+  };
+
+  const procesos = [
+    'Control de recepción de materia prima/insumo',
+    'Control de proceso',
+    'Controles finales',
+    'Controles producto',
   ];
+
+  const acciones = [
+    'Correctiva',
+    'Plan de acción',
+    'Correctora',
+  ];
+
 
   const handleSeccionChange = (value) => {
     setSeccion(value);
@@ -149,7 +157,7 @@ const NonConformityForm = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} >
       <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
         <TextInput
           style={styles.input}
@@ -165,8 +173,9 @@ const NonConformityForm = () => {
         valueField="value"
         placeholder="Seleccione una sección..."
         value={seccion}
-        onChange={(item) => handleSeccionChange(item.value)}
+        onChange={(item) => handleSeccionChange(item.value)} 
       />
+      
       {seccion && (
         <Dropdown
           style={styles.dropdown}
@@ -178,6 +187,7 @@ const NonConformityForm = () => {
           onChange={(item) => setSubseccion(item.value)}
         />
       )}
+      
       <Dropdown
         style={styles.dropdown}
         data={formasDeteccion.map((item) => ({ label: item, value: item }))}
@@ -187,16 +197,18 @@ const NonConformityForm = () => {
         value={formaDeteccion}
         onChange={(item) => setFormaDeteccion(item.value)}
       />
+
       <Dropdown
         style={styles.dropdown}
         data={tiposBase.map((item) => ({ label: item, value: item }))}
         labelField="label"
         valueField="value"
         placeholder="Seleccione un tipo base..."
-        value={tipoBase}
+        value={tipoBase} 
         onChange={(item) => setTipoBase(item.value)}
       />
-      {tipoBase && (
+
+      {tipoBase && (  
         <Dropdown
           style={styles.dropdown}
           data={tiposOrigenPorBase[tipoBase].map((item) => ({ label: item, value: item }))}
@@ -208,42 +220,43 @@ const NonConformityForm = () => {
         />
       )}
 
-      {tipoBase == "Producto/Materia prima" && (
-      <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ingrese el número de lote..."
-          value={lote}
-          onChangeText={setLote}
+
+      {tipoBase === "Producto" && (
+        <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
+          <TextInput
+            style={styles.input}
+            placeholder="Ingrese el número de lote..."
+            value={lote}
+            onChangeText={setLote}
+          />
+        </Animated.View>
+      )}
+
+      {tipoBase === "Producto" && (
+        <Dropdown
+          style={styles.dropdown}
+          data={productos_materiaprima.map((item) => ({ label: item, value: item }))}
+          labelField="label"
+          valueField="value"
+          placeholder='Seleccione producto...'
+          value={tipoError}
+          onChange={(item) => setTipoError(item.value)}
         />
-      </Animated.View>
       )}
 
-      {tipoOrigen && (
-      <Dropdown
+      {tipoBase && (
+        <Dropdown
         style={styles.dropdown}
-        data={productos_materiaprima[tipoOrigen].map((item) => ({ label: item, value: item }))}
-        labelField="label"
-        valueField="value"
-        placeholder='Seleccione producto...'
-        value={tipoError}
-        onChange={(item) => setTipoError(item.value)}
-      />
-      )}
-
-      {tipoOrigen && (
-      <Dropdown
-        style={styles.dropdown}
-        data={atributos_producto.map((item) => ({ label: item, value: item }))}
+        data={atributos[tipoBase].map((item) => ({ label: item, value: item }))}
         labelField="label"
         valueField="value"
         placeholder='Seleccione atributo...'
         value={atributo}
         onChange={(item) => setAtributo(item.value)}
-      />
+        />
       )}
 
-      {tipoOrigen && (
+      {tipoBase === "Producto" && (
       <Dropdown
         style={styles.dropdown}
         data={resultados_posibles.map((item) => ({ label: item, value: item }))}
@@ -255,10 +268,34 @@ const NonConformityForm = () => {
       />
       )}
 
-      {tipoOrigen && (
+      {tipoBase === "Proceso" && (
+        <Dropdown
+        style={styles.dropdown}
+        data={procesos.map((item) => ({ label: item, value: item }))}
+        labelField="label"
+        valueField="value"
+        placeholder='Seleccione subproceso...'
+        value={proceso}
+        onChange={(item) => setProceso(item.value)}
+        />
+      )}
+
+      {tipoBase === "Proceso" && (
+        <Dropdown
+        style={styles.dropdown}
+        data={acciones.map((item) => ({ label: item, value: item }))}
+        labelField="label"
+        valueField="value"
+        placeholder='Seleccione acción...'
+        value={accion}
+        onChange={(item) => setAccion(item.value)}
+        />
+      )}
+
+      {tipoBase && (
       <Dropdown
         style={styles.dropdown}
-        data={nc_posibles.map((item) => ({ label: item, value: item }))}
+        data={nc_posibles[tipoBase].map((item) => ({ label: item, value: item }))}
         labelField="label"
         valueField="value"
         placeholder='Seleccione estado...'
@@ -266,6 +303,7 @@ const NonConformityForm = () => {
         onChange={(item) => setNc(item.value)}
       />
       )}
+      
 
     {errors.cliente && <Text style={styles.errorText}>{errors.cliente}</Text>}
     <TouchableOpacity style={styles.button} onPress={handleSubmit}>
@@ -291,12 +329,14 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 45,
-    borderColor: '#ccc',
-    borderWidth: 1,
+    borderColor: '#2E8B57',
+    borderWidth: 2,
     borderRadius: 10, // Bordes redondeados
     paddingHorizontal: 15, // Más padding
     fontFamily: 'Roboto-Regular', // Cambia la fuente a Roboto
-    shadowColor: '#000',
+    fontSize: 16,
+    fontWeight: 'regular',
+    shadowColor: '#fff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -305,14 +345,14 @@ const styles = StyleSheet.create({
   dropdown: {
     width: '100%',
     height: 45,
-    borderColor: '#ccc',
-    borderWidth: 1,
+    borderColor: '#2E8B57',
+    borderWidth: 2,
     borderRadius: 10, // Bordes redondeados
     paddingHorizontal: 15, // Más padding
     paddingVertical: 10, // Más padding
     marginBottom: 20,
     fontFamily: 'Roboto-Regular', // Cambia la fuente a Roboto
-    shadowColor: '#000',
+    shadowColor: '#fff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -320,7 +360,7 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 45,
-    backgroundColor: '#007BFF',
+    backgroundColor: '#2E8B57',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10, // Bordes redondeados
