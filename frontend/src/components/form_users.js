@@ -103,7 +103,7 @@ const NonConformityForm = () => {
   const formasDeteccion = [
     'Reclamo de un cliente',
     'Incumplimiento de standares',
-    'Auditoráas',
+    'Auditorías',
     'Inspecciones',
     'Análisis de datos',
     'Resultados de evaluaciones',
@@ -172,6 +172,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder="Seleccione una sección..."
+        placeholderStyle={{ color: 'gray' }}
         value={seccion}
         onChange={(item) => handleSeccionChange(item.value)} 
       />
@@ -183,6 +184,7 @@ const NonConformityForm = () => {
           labelField="label"
           valueField="value"
           placeholder="Seleccione una subsección..."
+          placeholderStyle={{ color: 'gray' }}
           value={subseccion}
           onChange={(item) => setSubseccion(item.value)}
         />
@@ -194,6 +196,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder="Seleccione una forma de detección..."
+        placeholderStyle={{ color: 'gray' }}
         value={formaDeteccion}
         onChange={(item) => setFormaDeteccion(item.value)}
       />
@@ -204,6 +207,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder="Seleccione un tipo base..."
+        placeholderStyle={{ color: 'gray' }}
         value={tipoBase} 
         onChange={(item) => setTipoBase(item.value)}
       />
@@ -215,6 +219,7 @@ const NonConformityForm = () => {
           labelField="label"
           valueField="value"
           placeholder="Seleccione un tipo de origen..."
+          placeholderStyle={{ color: 'gray' }}
           value={tipoOrigen}
           onChange={(item) => setTipoOrigen(item.value)}
         />
@@ -226,6 +231,7 @@ const NonConformityForm = () => {
           <TextInput
             style={styles.input}
             placeholder="Ingrese el número de lote..."
+            placeholderStyle={{ color: 'gray' }}
             value={lote}
             onChangeText={setLote}
           />
@@ -239,6 +245,7 @@ const NonConformityForm = () => {
           labelField="label"
           valueField="value"
           placeholder='Seleccione producto...'
+          placeholderStyle={{ color: 'gray' }}
           value={tipoError}
           onChange={(item) => setTipoError(item.value)}
         />
@@ -251,6 +258,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder='Seleccione atributo...'
+        placeholderStyle={{ color: 'gray' }}
         value={atributo}
         onChange={(item) => setAtributo(item.value)}
         />
@@ -263,6 +271,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder='Seleccione resultado...'
+        placeholderStyle={{ color: 'gray' }}
         value={resultado}
         onChange={(item) => setResultado(item.value)}
       />
@@ -275,6 +284,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder='Seleccione subproceso...'
+        placeholderStyle={{ color: 'gray' }}
         value={proceso}
         onChange={(item) => setProceso(item.value)}
         />
@@ -287,6 +297,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder='Seleccione acción...'
+        placeholderStyle={{ color: 'gray' }}
         value={accion}
         onChange={(item) => setAccion(item.value)}
         />
@@ -299,6 +310,7 @@ const NonConformityForm = () => {
         labelField="label"
         valueField="value"
         placeholder='Seleccione estado...'
+        placeholderStyle={{ color: 'gray' }}
         value={nc}
         onChange={(item) => setNc(item.value)}
       />
@@ -335,7 +347,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15, // Más padding
     fontFamily: 'Roboto-Regular', // Cambia la fuente a Roboto
     fontSize: 16,
-    fontWeight: 'regular',
+    fontWeight: 'ultralight',
     shadowColor: '#fff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
