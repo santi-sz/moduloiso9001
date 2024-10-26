@@ -2,21 +2,25 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import NonConformityForm from './components/form_users'; // Asegúrate de que la ruta sea correcta
+import UploadImg from './components/upload_img';
 
 export default function App() {
   return (
-    <ScrollView>
-    <View style={styles.container}>
-      <Text style={styles.title}>Formulario de No conformidad</Text>
-      <View style={styles.underline} />
-      <NonConformityForm/>
-    </View>
+    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Formulario de No conformidad</Text>
+        <View style={styles.underline} />
+        <NonConformityForm/> 
+        <UploadImg /> {/* Agregar el componente UploadImg aquí */}
+      </View>
     </ScrollView>
   );
 }
 
-
 const styles = StyleSheet.create({
+  scrollViewContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     paddingTop: 120,
