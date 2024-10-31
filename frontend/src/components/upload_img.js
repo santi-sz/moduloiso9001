@@ -71,8 +71,10 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2,
         width: '100%', // Ajusta el ancho del botón
+        marginBottom: 20, // Añade un margen inferior para separar los botones
     },
     buttonText: {
+        padding: 10,
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',

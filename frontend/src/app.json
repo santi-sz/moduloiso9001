@@ -12,19 +12,26 @@
       "backgroundColor": "#fff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vainsito.iso9001"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#fff"
-      }
+      },
+      "package": "com.vainsito.iso9001"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "020d6c7f-8e25-438e-9a3d-894227d2a186"
+      }
+    }
   }
 }

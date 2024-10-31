@@ -2,7 +2,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import NonConformityForm from './components/form_users'; // Asegúrate de que la ruta sea correcta
-import UploadImg from './components/upload_img';
 
 export default function App() {
   return (
@@ -11,7 +10,6 @@ export default function App() {
         <Text style={styles.title}>Formulario de No conformidad</Text>
         <View style={styles.underline} />
         <NonConformityForm/> 
-        <UploadImg /> {/* Agregar el componente UploadImg aquí */}
       </View>
     </ScrollView>
   );
