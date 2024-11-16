@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, forwardRef } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,19 @@ import {
   StyleSheet,
   Animated,
   ScrollView,
-  Button,
   Alert,
+  Dimensions,
+  Pressable,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import UploadImg from "./upload_img"; // Importa el componente UploadImg
+import Toast from 'react-native-toast-message'; // Importa Toast
+
+
+
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,6 +38,7 @@ const NonConformityForm = () => {
   const [nc, setNc] = useState("");
   const [errors, setErrors] = useState({});
   const [proceso, setProceso] = useState("");
+  const [descripcion, setDescripcion] = useState("");
   const [accion, setAccion] = useState("");
 
   const [fontsLoaded] = useFonts({
@@ -61,30 +68,118 @@ const NonConformityForm = () => {
     if (!cliente) newErrors.cliente = "El nombre es obligatorio";
     if (!seccion) newErrors.seccion = "La sección es obligatoria";
     if (!subseccion) newErrors.subseccion = "La subsección es obligatoria";
-    if (!formaDeteccion)
-      newErrors.formaDeteccion = "La forma de detección es obligatoria";
-    if (!tipoBase) newErrors.tipoBase = "El tipo base es obligatorio";
-    if (!tipoOrigen) newErrors.tipoOrigen = "El tipo de origen es obligatorio";
-    if (!lote) newErrors.lote = "El número de lote es obligatorio";
-    if (!atributo) newErrors.atributo = "El atributo es obligatorio";
-    if (!resultado) newErrors.resultado = "El resultado es obligatorio";
-    if (!nc) newErrors.nc = "El estado es obligatorio";
-    if (!proceso) newErrors.proceso = "El subproceso es obligatorio";
-    if (!accion) newErrors.accion = "La acción es obligatoria";
+    if (!formaDeteccion) newErrors.formaDeteccion = "La forma de detección es obligatoria";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    console.log("handleSubmit called");
     if (validateForm()) {
-      console.log("Formulario enviado");
-      Alert.alert("No Conformidad", "Formulario enviado");
+      console.log("Formulario válido");
+      const ticketData = {
+        user_name: cliente,
+        section: seccion,
+        sub_section: subseccion,
+        detection_way: formaDeteccion,
+        base_type: tipoBase,
+        origin_type: tipoOrigen,
+        batch: lote,
+        resources_product: [tipoError], 
+        attributes_product: [atributo],
+        nc_products: tipoBase === "Producto" ? nc : "",
+        result_products: tipoBase === "Producto" ? resultado : "",
+        process: tipoBase === "Proceso" ? proceso : "",
+        attributes_process: tipoBase === "Proceso" ? [atributo] : [],
+        nc_process: tipoBase === "Proceso" ? nc : "",
+        action: tipoBase === "Proceso" ? accion : "",
+        description: descripcion,
+      };
+
+      console.log("ticketData:", ticketData);
+
+      try {
+        const response = await fetch("http://127.0.0.1:5001/create-ticket", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(ticketData),
+        });
+
+        console.log("response:", response);
+
+        if (response.ok) {
+          console.log("Form enviado correctamente");
+          Toast.show({
+            type: 'success',
+            text1: 'Formulado enviado correctamente',
+            position: 'top',
+            visibilityTime: 3000,
+            autoHide: true,
+            width: Dimensions.get('window').width * 0.75,
+          
+          });
+          resetForm();
+        } else {
+          console.log("testeo que entro aca")
+          Toast.show({
+            type: 'error',
+            text1: 'Error al enviar el formulario',
+            text2: 'Formulario incorrecto, revisar y enviar nuevamente',
+            position: 'top',
+            visibilityTime: 3000,
+            autoHide: true,
+            width: Dimensions.get('window').width * 0.75,
+          
+
+          });
+        }
+      } catch (error) {
+        console.error("Error al enviar el formulario:", error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error al enviar el formulario',
+          text2: 'Formulario incorrecto, revisar y enviar nuevamente',
+          topOffset: 30,
+          position: 'top',
+          visibilityTime: 3000,
+          autoHide: true,
+          width: Dimensions.get('window').width * 0.75,
+          
+        });
+      }
     } else {
-      Alert.alert(
-        "No Conformidad",
-        "Por favor, complete todos los campos obligatorios"
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Error: Formulario inválido',
+        text2: 'Por favor, complete todos los campos obligatorios',
+        position: 'top',
+        topOffset: 0,
+        visibilityTime: 3000,
+        autoHide: true,
+        width: Dimensions.get('window').width * 0.75,
+        
+      });
     }
+  };
+
+  const resetForm = () => {
+    setCliente("");
+    setSeccion(null);
+    setSubseccion(null);
+    setFormaDeteccion(null);
+    setTipoBase(null);
+    setTipoOrigen(null);
+    setTipoError(null);
+    setLote("");
+    setAtributo("");
+    setResultado("");
+    setNc("");
+    setErrors({});
+    setProceso("");
+    setAccion("");
+    setDescripcion("");
   };
 
   const secciones = [
@@ -310,7 +405,14 @@ const NonConformityForm = () => {
         placeholder="Seleccione un tipo base..."
         placeholderStyle={{ color: "gray" }}
         value={tipoBase}
-        onChange={(item) => setTipoBase(item.value)}
+        onChange={(item) => {
+          setTipoBase(item.value);
+          if (item.value === "Producto") {
+            setProceso("");
+            setAccion("");
+            setAtributo("");
+          }
+        }}
       />
 
       {tipoBase && (
@@ -431,11 +533,35 @@ const NonConformityForm = () => {
         />
       )}
 
+      <TextInput
+        value={descripcion}
+        onChangeText={setDescripcion}
+        placeholder="Agregue una descripción del problema/sugerencia..."
+        style={{     
+          
+          borderColor: "#2E8B57",
+          borderWidth: 2,
+          borderRadius: 10,
+          paddingHorizontal: 15,
+          fontFamily: "Roboto-Regular",
+          fontSize: 16,
+          shadowColor: "#fff",
+          height: 100,
+          color: "#808080",
+          textAlignVertical: "center",
+          textAlign: "center",
+          paddingTop: 20,
+        }}
+        multiline
+      />
       <UploadImg />
-      {errors.cliente && <Text style={styles.errorText}>{errors.cliente}</Text>}
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+      <Pressable style={styles.button} 
+            onPress={() => {
+              console.log("boton presionado");
+              handleSubmit();
+            }}>
         <Text style={styles.buttonText}>Enviar Formulario</Text>
-      </TouchableOpacity>
+      </Pressable>
     </ScrollView>
   );
 };
@@ -449,6 +575,7 @@ const styles = StyleSheet.create({
     padding: 40,
     backgroundColor: "#fff",
     fontFamily: "Roboto-Regular",
+    
   },
   scrollViewContainer: {
     flexGrow: 1,
@@ -461,6 +588,8 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 20,
+    color: "#808080",
+
   },
   input: {
     height: 45,
@@ -515,5 +644,6 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 16,
     marginTop: 5,
+    textAlign: "center"
   },
 });
