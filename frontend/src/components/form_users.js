@@ -17,10 +17,6 @@ import * as SplashScreen from "expo-splash-screen";
 import UploadImg from "./upload_img"; // Importa el componente UploadImg
 import Toast from 'react-native-toast-message'; // Importa Toast
 
-
-
-
-
 SplashScreen.preventAutoHideAsync();
 
 const NonConformityForm = () => {
@@ -32,7 +28,7 @@ const NonConformityForm = () => {
   const [tipoOrigen, setTipoOrigen] = useState(null);
   const [tipoError, setTipoError] = useState(null);
   const [lote, setLote] = useState("");
-  const [atributo, setAtributo] = useState("");
+  const [atributo, setAtributo] = useState([]);
   const [resultado, setResultado] = useState("");
   const [animacion] = useState(new Animated.Value(0));
   const [nc, setNc] = useState("");
@@ -466,12 +462,27 @@ const NonConformityForm = () => {
             label: item,
             value: item,
           }))}
+
           labelField="label"
           valueField="value"
-          placeholder="Seleccione atributo..."
-          placeholderStyle={{ color: "gray" }}
+          placeholder={atributo.length > 0 ? atributo.join(", ") : "Seleccione atributo..."}
+          placeholderStyle={{ color: atributo.length > 0 ? "black" : "gray" }}
           value={atributo}
-          onChange={(item) => setAtributo(item.value)}
+          onChange={(item) => {
+            if (atributo.includes(item.value)) {
+              setAtributo(atributo.filter(i => i !== item.value));
+            } else {
+              setAtributo([...atributo, item.value]);
+            }
+          }}
+          renderItem={item => (
+            <View style={styles.item}>
+              <Text>{item.label}</Text>
+              {atributo.includes(item.value) && <Text>✓</Text>}
+            </View>
+          )}
+          selectedTextStyle={styles.selectedText}
+          multiple={true}
         />
       )}
 
@@ -551,15 +562,12 @@ const NonConformityForm = () => {
           textAlignVertical: "center",
           textAlign: "center",
           paddingTop: 20,
+          marginBottom: 20,
         }}
         multiline
       />
       <UploadImg />
-      <Pressable style={styles.button} 
-            onPress={() => {
-              console.log("boton presionado");
-              handleSubmit();
-            }}>
+      <Pressable style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Enviar Formulario</Text>
       </Pressable>
     </ScrollView>
@@ -590,6 +598,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#808080",
 
+  },
+  item: {
+    padding: 17,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    color: "#2E8B57",
+  
+  },
+  selectedText: {
+    fontSize: 16,
+    color: "#00000",
   },
   input: {
     height: 45,
@@ -634,6 +654,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     marginBottom: 20, // Añade un margen inferior para separar los botones
+    width: "80%",
   },
   buttonText: {
     color: "#fff",
