@@ -15,10 +15,11 @@ class NonConformity(BaseModel):
     nc_products: Optional[str] = ""
     result_products: Optional[str] = "" 
     process: Optional[str] = ""
-    attributes_process: Optional[list[str]] = []
+    attributes_process: Optional[List[str]] = []
     nc_process: Optional[str] = ""
     action: Optional[str] = ""
     description: Optional[str] = ""
+    image: Optional[bytes] = None  # Nuevo campo para la imagen
     
     #========== Validators =============
     @field_validator("section")

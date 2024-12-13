@@ -24,7 +24,9 @@ def get_db():
 @app.post("/create-ticket")
 def create_ticket():
     actual_date = datetime.now()
-    ticket_data = request.get_json()
+    ticket_data = request.form.to_dict()
+    image = request.files.get('image')
+    
     try:
         ticket = NonConformity(**ticket_data)
     except ValueError as e:
@@ -48,7 +50,8 @@ def create_ticket():
             attributes_process=",".join(ticket.attributes_process),
             nc_process=ticket.nc_process,
             action=ticket.action,
-            description=ticket.description
+            description=ticket.description,
+            image=image.read() if image else None  # Guardar la imagen como binario
         )
         try:
             db.add(db_ticket)

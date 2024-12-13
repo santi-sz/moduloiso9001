@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, Integer, Date
+from sqlalchemy import Column, ForeignKey, LargeBinary, String, Integer, Date
 from database import Base
 
 class NCTicket(Base):
@@ -27,3 +27,5 @@ class NCTicket(Base):
     
     action = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    
+    image = Column(LargeBinary, nullable=True)  # Nuevo campo para la imagen
