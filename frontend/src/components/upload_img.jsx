@@ -2,26 +2,29 @@ import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View, ActivityIndicator, Image, Pressable } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 
-export default function UploadImg() {
+export default function UploadImg({ onImagesSelect }) {
     const [images, setImages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     
     const pickImages = async () => {
         setIsLoading(true);
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaType,
-            allowsMultipleSelection: true,
-            selectionLimit: 15,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsMultipleSelection: true, // Permitir la selección de múltiples imágenes
         });
         setIsLoading(false);
         console.log(result);
         if (!result.canceled) {
-            setImages(result.assets ? result.assets.map(img => img.uri) : [result.uri]);
+            const selectedImages = result.assets ? result.assets.map(asset => asset.uri) : [result.uri];
+            setImages(selectedImages);
+            onImagesSelect(selectedImages); // Llamar a la función de devolución de llamada con las imágenes seleccionadas
         }
     };
 
     const removeImage = (uri) => {
-        setImages(images.filter(image => image !== uri));
+        const updatedImages = images.filter(image => image !== uri);
+        setImages(updatedImages);
+        onImagesSelect(updatedImages); // Llamar a la función de devolución de llamada con las imágenes actualizadas
     };
 
     return (
@@ -35,7 +38,7 @@ export default function UploadImg() {
                 ) : (
                     <View>
                         <Pressable style={styles.button} onPress={pickImages}>
-                            <Text style={styles.buttonText}>Subir Imagen</Text>
+                            <Text style={styles.buttonText}>Subir Imágenes</Text>
                         </Pressable>
                     </View>
                 )}

@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Animated,
   ScrollView,
   Alert,
@@ -16,6 +15,20 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import UploadImg from "./upload_img"; // Importa el componente UploadImg
 import Toast from 'react-native-toast-message'; // Importa Toast
+import {
+  secciones,
+  subseccionesPorSeccion,
+  formasDeteccion,
+  tiposBase,
+  tiposOrigenPorBase,
+  productos_materiaprima,
+  atributos,
+  resultados_posibles,
+  nc_posibles,
+  procesos,
+  acciones,
+} from "./formConstants"; // Importa las constantes
+import styles from "./formStyles"; // Importa los estilos
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,6 +49,7 @@ const NonConformityForm = () => {
   const [proceso, setProceso] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [accion, setAccion] = useState("");
+  const [images, setImages] = useState([]); // Estado para las imágenes
 
   const [fontsLoaded] = useFonts({
     "Roboto-Regular": require("../assets/fonts/Roboto-Regular.ttf"),
@@ -73,6 +87,11 @@ const NonConformityForm = () => {
     console.log("handleSubmit called");
     if (validateForm()) {
       console.log("Formulario válido");
+  
+      // Convierte a listas explícitamente
+      const resourcesProductArray = Array.isArray(tipoError) ? tipoError : [tipoError];
+      const attributesProductArray = Array.isArray(atributo) ? atributo : [atributo];
+  
       const ticketData = {
         user_name: cliente,
         section: seccion,
@@ -81,85 +100,69 @@ const NonConformityForm = () => {
         base_type: tipoBase,
         origin_type: tipoOrigen,
         batch: lote,
-        resources_product: [tipoError], 
-        attributes_product: [atributo],
+        resources_product: resourcesProductArray,
+        attributes_product: attributesProductArray,
         nc_products: tipoBase === "Producto" ? nc : "",
         result_products: tipoBase === "Producto" ? resultado : "",
         process: tipoBase === "Proceso" ? proceso : "",
-        attributes_process: tipoBase === "Proceso" ? [atributo] : [],
+        attributes_process: tipoBase === "Proceso" ? attributesProductArray : [],
         nc_process: tipoBase === "Proceso" ? nc : "",
         action: tipoBase === "Proceso" ? accion : "",
         description: descripcion,
       };
-
       console.log("ticketData:", ticketData);
+      const formData = new FormData();
 
+      // Agregar datos del formulario como JSON
+      formData.append('data', JSON.stringify(ticketData));
+      console.log("Form data:", formData);
+      // Agregar imágenes al FormData
+      images.forEach((image, index) => {
+        formData.append(`image_${index}`, {
+          uri: image,
+          name: `image_${index}.jpg`, // Puedes ajustar la extensión según corresponda
+          type: 'image/jpeg', // Asegúrate de usar el tipo MIME correcto
+        });
+      });
       try {
         const response = await fetch("http://127.0.0.1:5001/create-ticket", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(ticketData),
+          body: formData,
         });
-
-        console.log("response:", response);
-
+  
         if (response.ok) {
-          console.log("Form enviado correctamente");
+          console.log("Formulario enviado correctamente");
           Toast.show({
-            type: 'success',
-            text1: 'Formulado enviado correctamente',
-            position: 'top',
-            visibilityTime: 3000,
-            autoHide: true,
-            width: Dimensions.get('window').width * 0.75,
-          
+            type: "success",
+            text1: "Formulario enviado correctamente",
           });
           resetForm();
         } else {
-          console.log("testeo que entro aca")
+          const errorData = await response.json();
+          console.error("Error al enviar el formulario:", errorData);
           Toast.show({
-            type: 'error',
-            text1: 'Error al enviar el formulario',
-            text2: 'Formulario incorrecto, revisar y enviar nuevamente',
-            position: 'top',
-            visibilityTime: 3000,
-            autoHide: true,
-            width: Dimensions.get('window').width * 0.75,
-          
-
+            type: "error",
+            text1: "Error al enviar el formulario",
+            text2: errorData["Invalid input error"],
           });
         }
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
         Toast.show({
-          type: 'error',
-          text1: 'Error al enviar el formulario',
-          text2: 'Formulario incorrecto, revisar y enviar nuevamente',
-          topOffset: 30,
-          position: 'top',
-          visibilityTime: 3000,
-          autoHide: true,
-          width: Dimensions.get('window').width * 0.75,
-          
+          type: "error",
+          text1: "Error al enviar el formulario",
         });
       }
     } else {
       Toast.show({
-        type: 'error',
-        text1: 'Error: Formulario inválido',
-        text2: 'Por favor, complete todos los campos obligatorios',
-        position: 'top',
-        topOffset: 0,
-        visibilityTime: 3000,
-        autoHide: true,
-        width: Dimensions.get('window').width * 0.75,
-        
+        type: "error",
+        text1: "Error: Formulario inválido",
+        text2: "Por favor, complete todos los campos obligatorios",
       });
     }
   };
-
+  
+  
   const resetForm = () => {
     setCliente("");
     setSeccion(null);
@@ -169,176 +172,15 @@ const NonConformityForm = () => {
     setTipoOrigen(null);
     setTipoError(null);
     setLote("");
-    setAtributo("");
+    setAtributo([]);
     setResultado("");
     setNc("");
     setErrors({});
     setProceso("");
     setAccion("");
     setDescripcion("");
+    setImages([]); // Resetear las imágenes
   };
-
-  const secciones = [
-    "Fábrica de alimentos",
-    "Producción de pollos",
-    "Faena",
-    "Producción de quesos",
-    "Producción de Leche: Tambo",
-    "Reparto",
-    "Producción de Cerdos",
-    "Administración",
-    "Mantenimiento",
-  ];
-
-  const subseccionesPorSeccion = {
-    "Fábrica de alimentos": [
-      "Ensilado/Depósito",
-      "Tostadora",
-      "Mixado",
-      "Pesadas de Insumos/ Alimentos",
-      "Despacho / Depósito",
-      "Instalaciones Generales",
-    ],
-    "Producción de pollos": [
-      "Galpón 1",
-      "Galpón 2",
-      "Galpón 3",
-      "Galpón 4",
-      "Galpón 5",
-      "Galpón 6",
-      "Instalaciones Generales",
-    ],
-    Faena: [
-      "Transporte de pollos",
-      "Sala de espera",
-      "Sala de degolle",
-      "Sala de pelado",
-      "Sala de faena",
-      "Instalaciones Generales",
-    ],
-    "Producción de quesos": [
-      "Sala de elaboración",
-      "Sala caldera",
-      "Sala despacho",
-      "Cámara 1",
-      "Cadena de Frío",
-      "Cámara 2",
-      "Zotano",
-      "Pileta efluentes",
-      "Pesadas de Productos despachados",
-    ],
-    "Producción de Leche: Tambo": [
-      "Rodeo vacas en producción",
-      "Sala de ordeñe",
-      "Sala tina de leche",
-      "Rodeo de vacas en espera",
-      "Rodeo vaquillas jóvenes",
-      "Rodeo terneras",
-      "Rodeo descarte y terneros",
-      "Terreno de Pastoreo propio",
-      "Terreno de pastoreo alquilado 1",
-      "Terreno de Pastoreo alquilado 2",
-      "Pileta efluentes",
-    ],
-    Reparto: [
-      "Cámara 1: Pollos A",
-      "Cámara 2: Pollos B",
-      "Cadena de frío",
-      "Sala despacho",
-      "Transporte",
-      "Pesadas de Productos Despachados",
-    ],
-    Administración: [
-      "Depósito/Archivo",
-      "Gerencia",
-      "Contabilidad",
-      "Ventas Alimentos",
-      "Ventas Reparto",
-      "Back-Up",
-    ],
-    Mantenimiento: [
-      "Mantenimiento de 1er Nivel (Operarios)",
-      "Mantenimiento Correctivo",
-      "Mantenimiento preventivo",
-      "Plan de verificación de instrumentos",
-      "Plan de Control de Parámetros de Procesos",
-    ],
-  };
-
-  const formasDeteccion = [
-    "Reclamo de un cliente",
-    "Incumplimiento de standares",
-    "Auditorías",
-    "Inspecciones",
-    "Análisis de datos",
-    "Resultados de evaluaciones",
-    "Resultados de mediciones",
-    "Sugerencia de Mejora",
-  ];
-
-  const tiposBase = ["Producto", "Proceso"];
-
-  const tiposOrigenPorBase = {
-    Producto: ["Materia prima"],
-    Proceso: [
-      "Mano de Obra",
-      "Métodos",
-      "Maquinaria",
-      "Infraestructura",
-      "Servicios",
-      "Medio Ambiente",
-      "Higiene y Seguridad",
-      "Transporte",
-    ],
-  };
-
-  const productos_materiaprima = [
-    "Producto 1",
-    "Producto 2",
-    "Producto 3",
-    "Producto 4",
-    "Producto 5",
-  ];
-
-  const atributos = {
-    Producto: [
-      "Cantidad",
-      "Calidad",
-      "Ph",
-      "Dimensión",
-      "Peso",
-      "Sabor",
-      "Humedad",
-      "Olor",
-    ],
-    Proceso: [
-      "Plazo entrega",
-      "Humedad",
-      "Higiene",
-      "Seguridad",
-      "Temperatura",
-    ],
-  };
-
-  const resultados_posibles = [
-    "Aceptado",
-    "Aceptado con observación",
-    "Rechazado",
-  ];
-
-  const nc_posibles = {
-    Producto: ["Grave", "Urgente", "Menor"],
-    Proceso: ["Grave", "Urgente", "Menor"],
-  };
-
-  const procesos = [
-    "Control de recepción de materia prima/insumo",
-    "Control de proceso",
-    "Controles finales",
-    "Controles producto",
-  ];
-
-  const acciones = ["Correctiva", "Plan de acción", "Correctora"];
 
   const handleSeccionChange = (value) => {
     setSeccion(value);
@@ -406,7 +248,7 @@ const NonConformityForm = () => {
           if (item.value === "Producto") {
             setProceso("");
             setAccion("");
-            setAtributo("");
+            setAtributo([]);
           }
         }}
       />
@@ -462,7 +304,6 @@ const NonConformityForm = () => {
             label: item,
             value: item,
           }))}
-
           labelField="label"
           valueField="value"
           placeholder={atributo.length > 0 ? atributo.join(", ") : "Seleccione atributo..."}
@@ -566,7 +407,7 @@ const NonConformityForm = () => {
         }}
         multiline
       />
-      <UploadImg />
+      <UploadImg onImagesSelect={(selectedImages) => setImages(selectedImages)} />
       <Pressable style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Enviar Formulario</Text>
       </Pressable>
@@ -575,96 +416,3 @@ const NonConformityForm = () => {
 };
 
 export default NonConformityForm;
-
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    flex: 1,
-    padding: 40,
-    backgroundColor: "#fff",
-    fontFamily: "Roboto-Regular",
-    
-  },
-  scrollViewContainer: {
-    flexGrow: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  formContainer: {
-    width: "100%",
-    alignItems: "center",
-  },
-  inputContainer: {
-    marginBottom: 20,
-    color: "#808080",
-
-  },
-  item: {
-    padding: 17,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    color: "#2E8B57",
-  
-  },
-  selectedText: {
-    fontSize: 16,
-    color: "#00000",
-  },
-  input: {
-    height: 45,
-    borderColor: "#2E8B57",
-    borderWidth: 2,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontFamily: "Roboto-Regular",
-    fontSize: 16,
-    fontWeight: "ultralight",
-    shadowColor: "#fff",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  dropdown: {
-    width: "100%",
-    height: 45,
-    borderColor: "#2E8B57",
-    borderWidth: 2,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginBottom: 20,
-    fontFamily: "Roboto-Regular",
-    shadowColor: "#fff",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  button: {
-    height: 45,
-    backgroundColor: "#2E8B57",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-    marginBottom: 20, // Añade un margen inferior para separar los botones
-    width: "80%",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontFamily: "Roboto-Regular",
-  },
-  errorText: {
-    color: "red",
-    fontSize: 16,
-    marginTop: 5,
-    textAlign: "center"
-  },
-});

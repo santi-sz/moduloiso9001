@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+# main.py
+from flask import Flask, json, request, jsonify
 from flask_cors import CORS
 from schemas import NonConformity
 from database import SessionLocal, engine
@@ -7,7 +8,7 @@ import models
 import logging
 
 app = Flask(__name__)
-CORS(app)  # Habilita CORS para todas las rutas
+CORS(app, resources={r"/*": {"origins": "*"}})  # Habilita CORS para todas las rutas
 models.Base.metadata.create_all(bind=engine)
 
 def delete_db():
@@ -24,9 +25,18 @@ def get_db():
 @app.post("/create-ticket")
 def create_ticket():
     actual_date = datetime.now()
-    ticket_data = request.form.to_dict()
-    image = request.files.get('image')
+    data = request.form['data']  # Obtener los datos del formulario
+    images = request.files.getlist('images')  # Obtener todas las imágenes
+    if not data:
+        return {"error": "No se recibieron datos en la solicitud"}, 400
     
+    try:
+        ticket_data = json.loads(data)
+    except json.JSONDecodeError:
+        return {"error": "Error al decodificar datos JSON"}, 400
+    
+    print("Datos del formulario recibidos:", ticket_data)
+    print("Número de imágenes recibidas:", len(images))
     try:
         ticket = NonConformity(**ticket_data)
     except ValueError as e:
@@ -51,15 +61,24 @@ def create_ticket():
             nc_process=ticket.nc_process,
             action=ticket.action,
             description=ticket.description,
-            image=image.read() if image else None  # Guardar la imagen como binario
         )
+        print("Datos del ticket a insertar:", db_ticket.__dict__)
         try:
             db.add(db_ticket)
+            db.commit()
+            db.refresh(db_ticket)
+
+            # Guardar las imágenes
+            for image in images:
+                db_image = models.NCTicketImage(
+                    ticket_id=db_ticket.id,
+                    image=image.read()
+                )
+                db.add(db_image)
+
             db.commit()
             ticket_id = db_ticket.id  # Asumiendo que el modelo tiene un atributo 'id'
             return jsonify({"message": "Ticket created successfully", "ticket_id": ticket_id}), 201
         except Exception as e:
             logging.exception("Error creating ticket: %s", e)
             return jsonify({"error": "Error creating ticket"}), 500
-        
-    print("Ticket created successfully")
