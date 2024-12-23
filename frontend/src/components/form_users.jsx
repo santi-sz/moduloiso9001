@@ -154,11 +154,16 @@ const NonConformityForm = () => {
         });
       }
     } else {
+      console.log("Formulario inválido");
       Toast.show({
         type: "error",
         text1: "Error: Formulario inválido",
         text2: "Por favor, complete todos los campos obligatorios",
+        position: "bottom",
+        visibilityTime: 3000,
+        autoHide: true,
       });
+      return;
     }
   };
   
@@ -188,6 +193,8 @@ const NonConformityForm = () => {
   };
 
   return (
+  
+  <View style={styles.container}>
     <ScrollView style={styles.container}>
       <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
         <TextInput
@@ -408,10 +415,20 @@ const NonConformityForm = () => {
         multiline
       />
       <UploadImg onImagesSelect={(selectedImages) => setImages(selectedImages)} />
-      <Pressable style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Enviar Formulario</Text>
-      </Pressable>
-    </ScrollView>
+      </ScrollView>
+
+      <View style={{ marginBottom: 0, alignItems: 'center' }}>
+        <Pressable 
+            style={styles.button} 
+            onPress={() => {
+                console.log("botón presionado");
+                handleSubmit();
+            }}
+        >
+            <Text style={styles.buttonText}>Enviar Formulario</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 };
 

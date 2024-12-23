@@ -5,7 +5,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     flex: 1,
-    padding: 40,
+    padding: 10,
     backgroundColor: "#fff",
     fontFamily: "Roboto-Regular",
   },

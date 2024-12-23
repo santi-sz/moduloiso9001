@@ -29,7 +29,9 @@ export default function UploadImg({ onImagesSelect }) {
 
     return (
         <View style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+            <ScrollView contentContainerStyle={styles.scrollViewContainer}
+                        keyboardShouldPersistTaps="handled"
+            >
                 {isLoading ? (
                     <View>
                         <Text style={{fontSize: 20, fontWeight: 'bold', textAlign: 'center'}}>Cargando...</Text>
@@ -77,10 +79,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 10,
-        boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.2)',
-        width: '100%', // Ajusta el ancho del botón
-        marginBottom: 20, // Añade un margen inferior para separar los botones
-    },
+        elevation: 5, // Reemplaza boxShadow por esto en Android
+        width: '100%',
+        marginBottom: 1,
+    },    
     buttonText: {
         padding: 10,
         color: '#fff',
@@ -92,7 +94,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'center',
         marginTop: 10,
-    },
+        maxHeight: 200, // Limita la altura máxima para evitar desbordamiento
+    },    
     imageWrapper: {
         position: 'relative',
         margin: 5,

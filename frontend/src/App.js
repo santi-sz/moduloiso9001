@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import NonConformityForm from './components/form_users'; // Asegúrate de que la ruta sea correcta
+import Toast from 'react-native-toast-message';
 
 export default function App() {
   return (
@@ -9,7 +10,8 @@ export default function App() {
       <View style={styles.container}>
         <Text style={styles.title}>Formulario de No conformidad</Text>
         <View style={styles.underline} />
-        <NonConformityForm/> 
+        <NonConformityForm/>
+        <Toast/>
       </View>
     </ScrollView>
   );
