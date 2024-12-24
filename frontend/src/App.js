@@ -1,17 +1,16 @@
-// App.js
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import NonConformityForm from './components/form_users'; // Asegúrate de que la ruta sea correcta
+import ViewTickets from './components/view_tickets';
 import Toast from 'react-native-toast-message';
+import Header from './components/view_tickets_header';
 
 export default function App() {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Formulario de No conformidad</Text>
-        <View style={styles.underline} />
-        <NonConformityForm/>
-        <Toast/>
+        <Header />
+        <ViewTickets />
+        <Toast />
       </View>
     </ScrollView>
   );
@@ -29,13 +28,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 15,
   },
-  title:{
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
   },
-  underline:{
-    borderBottomColor: '#2E8B57',
-    borderBottomWidth: 2,
-    width: '95%',
-  }
 });
