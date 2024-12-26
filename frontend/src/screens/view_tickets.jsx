@@ -19,7 +19,11 @@ const ViewTickets = () => {
           </TouchableOpacity>
           {activeIndex === index && (
             <View style={styles.accordionBody}>
-              <Text>Contenido del acordeón {item}</Text>
+              <Text>Nombre: NULL</Text>
+              <Text>Sección: NULL</Text>
+              <Text>Forma de detección: NULL</Text>
+              <Text>Tipo base: NULL</Text>
+              <Text>Descripción: NULL</Text>
             </View>
           )}
         </View>
