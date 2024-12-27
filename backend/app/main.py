@@ -82,3 +82,20 @@ def create_ticket():
         except Exception as e:
             logging.exception("Error creating ticket: %s", e)
             return jsonify({"error": "Error creating ticket"}), 500
+        
+@app.get("/get-tickets")
+def get_tickets():
+    """ Devuelve todos los tickets en formato de lista de diccionarios """
+    with next(get_db()) as db:
+        try:
+            tickets = db.query(models.NCTicket).all()
+            print("Tickets obtenidos:", tickets)
+            tickets_dict = []
+            for ticket in tickets:
+                ticket_dict = ticket.__dict__.copy()
+                ticket_dict.pop('_sa_instance_state', None)  # Excluir el atributo _sa_instance_state
+                tickets_dict.append(ticket_dict)
+            return jsonify(tickets_dict)
+        except Exception as e:
+            logging.exception("Error al obtener los tickets: %s", e)
+            return jsonify({"error": "Error al obtener los tickets"}), 500
