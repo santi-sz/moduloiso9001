@@ -116,14 +116,15 @@ const NonConformityForm = () => {
       // Agregar datos del formulario como JSON
       formData.append('data', JSON.stringify(ticketData));
       console.log("Form data:", formData);
+      // COmo no se definio si se usaba la bdd en nube o local, se comento para que no de error
       // Agregar imágenes al FormData
-      images.forEach((image, index) => {
-        formData.append(`image_${index}`, {
-          uri: image,
-          name: `image_${index}.jpg`, // Puedes ajustar la extensión según corresponda
-          type: 'image/jpeg', // Asegúrate de usar el tipo MIME correcto
-        });
-      });
+      // images.forEach((image, index) => {
+      //  formData.append(`image_${index}`, {
+      //    uri: image,
+      //    name: `image_${index}.jpg`,
+      //    type: 'image/jpeg', // Tipo de la imagen
+      //  });
+      // });
       try {
         const response = await fetch("http://127.0.0.1:5001/create-ticket", {
           method: "POST",
