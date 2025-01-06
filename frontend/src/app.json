@@ -4,6 +4,7 @@
     "slug": "iso9001",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "lun",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -26,7 +27,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-router"
     ],
     "extra": {
       "eas": {
