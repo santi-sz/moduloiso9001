@@ -1,5 +1,4 @@
-// formStyles.js
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
@@ -42,10 +41,8 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto-Regular",
     fontSize: 16,
     fontWeight: "ultralight",
-    shadowColor: "#fff",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    marginBottom: 20,
+    boxShadow: "0px 2px 2px rgba(0, 0, 0, 0.2)",
     elevation: 2,
   },
   dropdown: {
@@ -58,10 +55,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 20,
     fontFamily: "Roboto-Regular",
-    shadowColor: "#fff",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    boxShadow: "0px 2px 2px rgba(0, 0, 0, 0.2)",
     elevation: 2,
   },
   button: {
@@ -70,10 +64,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    boxShadow: "0px 2px 2px rgba(0, 0, 0, 0.2)",
     elevation: 2,
     marginBottom: 20, // Añade un margen inferior para separar los botones
     width: "80%",
@@ -88,6 +79,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 5,
     textAlign: "center"
+  },
+  titulo:{
+    fontSize: 20,
+    fontFamily: "Roboto-Regular",
+    fontWeight: 'bold',
+    color: 'black',
+    textAlign: 'center',
+    alignSelf: 'self',
   },
 });
 

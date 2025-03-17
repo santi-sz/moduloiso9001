@@ -3,11 +3,7 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
-  Animated,
   ScrollView,
-  Alert,
-  Dimensions,
   Pressable,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
@@ -43,7 +39,6 @@ const NonConformityForm = () => {
   const [lote, setLote] = useState("");
   const [atributo, setAtributo] = useState([]);
   const [resultado, setResultado] = useState("");
-  const [animacion] = useState(new Animated.Value(0));
   const [nc, setNc] = useState("");
   const [errors, setErrors] = useState({});
   const [proceso, setProceso] = useState("");
@@ -60,14 +55,6 @@ const NonConformityForm = () => {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
-
-  useEffect(() => {
-    Animated.timing(animacion, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, []);
 
   if (!fontsLoaded) {
     return null;
@@ -111,8 +98,24 @@ const NonConformityForm = () => {
         description: descripcion,
       };
       console.log("ticketData:", ticketData);
-      const formData = new FormData();
+      // Limpiar campos no aplicables según base_type
+        if (tipoBase === "Producto") {
+          delete ticketData.process;
+          delete ticketData.attributes_process;
+          delete ticketData.nc_process;
+          delete ticketData.action;
+        }
 
+        if (tipoBase === "Proceso") {
+          delete ticketData.batch;
+          delete ticketData.resources_product;
+          delete ticketData.attributes_product;
+          delete ticketData.nc_products;
+          delete ticketData.result_products;
+        }
+
+      const formData = new FormData();
+      
       // Agregar datos del formulario como JSON
       formData.append('data', JSON.stringify(ticketData));
       console.log("Form data:", formData);
@@ -196,15 +199,14 @@ const NonConformityForm = () => {
   return (
   
   <View style={styles.container}>
+    <Text style={styles.titulo}>Formulario de No Conformidad</Text>
     <ScrollView style={styles.container}>
-      <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
         <TextInput
           style={styles.input}
           placeholder="Ingrese su nombre..."
           value={cliente}
           onChangeText={setCliente}
         />
-      </Animated.View>
       <Dropdown
         style={styles.dropdown}
         data={secciones.map((item) => ({ label: item, value: item }))}
@@ -278,15 +280,13 @@ const NonConformityForm = () => {
       )}
 
       {tipoBase === "Producto" && (
-        <Animated.View style={{ ...styles.inputContainer, opacity: animacion }}>
-          <TextInput
-            style={styles.input}
-            placeholder="Ingrese el número de lote..."
-            placeholderStyle={{ color: "gray" }}
-            value={lote}
-            onChangeText={setLote}
-          />
-        </Animated.View>
+        <TextInput
+          style={styles.input}
+          placeholder="Ingrese el número de lote..."
+          placeholderStyle={{ color: "gray" }}
+          value={lote}
+          onChangeText={setLote}
+        />
       )}
 
       {tipoBase === "Producto" && (
