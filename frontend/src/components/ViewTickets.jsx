@@ -1,22 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import Header from './header';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 
-const ViewTickets = () => {
+
+const ViewTickets = ({ onTicketsLoaded }) => {
   const [tickets, setTickets] = useState([]);
   const [activeIndex, setActiveIndex] = useState(null);
-
+  const router = useRouter();
+  
   useEffect(() => {
     const fetchTickets = async () => {
       try {
         const response = await fetch('http://127.0.0.1:5001/get-tickets');
         const data = await response.json();
         setTickets(data);
+
+        if (onTicketsLoaded) {
+          onTicketsLoaded(data);
+        }
+
       } catch (error) {
         console.error('Error fetching tickets:', error);
       }
     };
-
+    
     fetchTickets();
 
     const intervalId = setInterval(fetchTickets, 5000); // Actualiza cada 5 segundos
@@ -45,6 +53,16 @@ const ViewTickets = () => {
               <Text style={styles.headerAdd}>Fecha: {formatDate(ticket.date)}</Text>
               <Text style={styles.headerAdd}>{ticket.nc_products || ticket.nc_process}</Text>
             </Pressable>
+            {(ticket.nc_products?.toLowerCase().trim() === "grave" ||
+              ticket.nc_process?.toLowerCase().trim() === "grave") && (
+              <FontAwesome
+               name="exclamation-circle" size={30} color="green" style={styles.alertIcon}
+               onPress={() =>
+                router.push({
+                    pathname: "/panel_control",
+                })
+            } />
+            )}
             {activeIndex === index && (
               <View style={styles.accordionBody}>
                 <Text>Nombre: {ticket.user_name}</Text>
@@ -64,8 +82,9 @@ const ViewTickets = () => {
                 <>
                   {ticket.process && <Text>Proceso: {ticket.process}</Text>}
                   {ticket.attributes_process && <Text>Atributos del proceso: {ticket.attributes_process}</Text>}
-                  {ticket.action && <Text>Resultado: {ticket.action}</Text>}
+                  {ticket.action && <Text>Resultado: {ticket.action}</Text>}  
                 </>
+                
                 ) :null }
                 
                 <Text>Descripción: {ticket.description}</Text>
@@ -74,6 +93,7 @@ const ViewTickets = () => {
           </View>
         ))
       )}
+    
     </View>
   );
 };
@@ -125,6 +145,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 20,
+  },
+  link: {
+    marginBottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
   },
 });
 
