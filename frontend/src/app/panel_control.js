@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import PanelControl from '../components/panel_control';
 
 
@@ -16,7 +15,6 @@ export default function Panel() {
                 href="/"
                 style={styles.link}
             >
-                <FontAwesome name="exclamation-triangle" size={30} color="green" />
             </Link>
         </View>
     );

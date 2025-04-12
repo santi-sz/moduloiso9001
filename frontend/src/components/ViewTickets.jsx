@@ -60,6 +60,9 @@ const ViewTickets = ({ onTicketsLoaded }) => {
                onPress={() =>
                 router.push({
                     pathname: "/panel_control",
+                    params: {
+                      ticketId: ticket.id,
+                    },
                 })
             } />
             )}
