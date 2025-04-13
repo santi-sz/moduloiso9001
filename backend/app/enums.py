@@ -150,3 +150,11 @@ class Action(Enum):
     corrective = "Correctiva"
     action_plan = "Plan de acción"
     correctora = "Correctora"
+
+class ResourceType(Enum):
+    RECURSOS_HUMANOS = "Recursos Humanos"
+    CONTRATISTAS = "Contratistas"
+    MATERIALES = "Materiales"
+    MAQUINARIAS = "Maquinarias"
+    INVERSION = "Inversión"
+    OTROS = "Otros"

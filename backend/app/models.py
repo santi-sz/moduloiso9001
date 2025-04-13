@@ -1,7 +1,8 @@
-# models.py
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, LargeBinary
+from sqlalchemy import Column, Float, Integer, String, DateTime, ForeignKey, LargeBinary
 from sqlalchemy.orm import relationship
 from database import Base
+from sqlalchemy.dialects.postgresql import JSON
+from datetime import datetime
 
 class NCTicket(Base):
     __tablename__ = "nc_tickets"
@@ -26,6 +27,7 @@ class NCTicket(Base):
     description = Column(String, nullable=True)
     images = relationship("NCTicketImage", back_populates="ticket")
 
+
 class NCTicketImage(Base):
     __tablename__ = "nc_ticket_images"
 
@@ -33,3 +35,71 @@ class NCTicketImage(Base):
     ticket_id = Column(Integer, ForeignKey("nc_tickets.id"), nullable=False)
     image = Column(LargeBinary, nullable=False)
     ticket = relationship("NCTicket", back_populates="images")
+
+
+class CauseAnalysis(Base):
+    __tablename__ = "cause_analysis"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ticket_id = Column(Integer, ForeignKey("nc_tickets.id"), nullable=True)  # Relación opcional con NCTicket
+    date_analysis = Column(DateTime)
+    problem = Column(String)
+    suggestion = Column(String)
+    section = Column(String)
+    user = Column(String)
+    date_ticket = Column(DateTime)
+    assistants = Column(JSON, nullable=True)  # Lista de asistentes en formato JSON
+    definition = Column(String)
+
+    cause1 = Column(String(250), nullable=True)
+    cause2 = Column(String(250), nullable=True)
+    cause3 = Column(String(250), nullable=True)
+    cause4 = Column(String(250), nullable=True)
+    cause5 = Column(String(250), nullable=True)
+    cause6 = Column(String(250), nullable=True)
+    cause_origin = Column(String(250), nullable=True)
+
+    proposed_solution = Column(String(250), nullable=False)
+    resources = relationship("Resource", back_populates="analisis", cascade="all, delete-orphan")
+    archivos = relationship("Archivo", back_populates="analisis", cascade="all, delete-orphan")
+
+    gravedad = Column(String(250))
+    costo_oportunidad = Column(String)
+
+
+class Archivo(Base):
+    __tablename__ = 'archivo'
+    
+    id = Column(Integer, primary_key=True)
+    analisis_id = Column(Integer, ForeignKey('cause_analysis.id'), nullable=False)  # Relación corregida
+    
+    nombre = Column(String(255), nullable=False)  # Nombre original del archivo
+    nombre_almacenado = Column(String(255), nullable=False)  # Nombre en el sistema (único)
+    ruta_relativa = Column(String(512), nullable=False)  # Ruta relativa para acceso web
+    tipo_archivo = Column(String, nullable=False)
+    extension = Column(String(10))
+    tamano_bytes = Column(Integer)
+    fecha_subida = Column(DateTime, default=datetime.utcnow)
+    
+    analisis = relationship("CauseAnalysis", back_populates="archivos")  # Relación corregida
+
+
+class Resource(Base):
+    """
+        Tabla para representar los atributos de cada recurso requerido
+        para la solucion del problema
+    """
+    __tablename__ = 'recurso_requerido'
+
+    id = Column(Integer, primary_key=True)
+    analisis_id = Column(Integer, ForeignKey('cause_analysis.id'), nullable=False)  # Relación corregida
+    tipo = Column(String, nullable=False)
+    
+    unidad_medida = Column(String(50))
+    cantidad = Column(Float)
+    precio = Column(Float)
+    total_estimado = Column(Float)
+    proveedor_1 = Column(String(100))
+    proveedor_2 = Column(String(100))
+
+    analisis = relationship("CauseAnalysis", back_populates="resources")  # Relación corregida
