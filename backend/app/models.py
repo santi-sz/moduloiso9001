@@ -25,16 +25,7 @@ class NCTicket(Base):
     nc_process = Column(String, nullable=True)
     action = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    images = relationship("NCTicketImage", back_populates="ticket")
-
-
-class NCTicketImage(Base):
-    __tablename__ = "nc_ticket_images"
-
-    id = Column(Integer, primary_key=True, index=True)
-    ticket_id = Column(Integer, ForeignKey("nc_tickets.id"), nullable=False)
-    image = Column(LargeBinary, nullable=False)
-    ticket = relationship("NCTicket", back_populates="images")
+    archivos = relationship("Archivo", back_populates="ticket", cascade="all, delete-orphan")
 
 
 class CauseAnalysis(Base):
@@ -71,7 +62,8 @@ class Archivo(Base):
     __tablename__ = 'archivo'
     
     id = Column(Integer, primary_key=True)
-    analisis_id = Column(Integer, ForeignKey('cause_analysis.id'), nullable=False)  # Relación corregida
+    analisis_id = Column(Integer, ForeignKey('cause_analysis.id'), nullable=True)  # Relación opcional con CauseAnalysis
+    ticket_id = Column(Integer, ForeignKey('nc_tickets.id'), nullable=True)  # Relación opcional con NCTicket
     
     nombre = Column(String(255), nullable=False)  # Nombre original del archivo
     nombre_almacenado = Column(String(255), nullable=False)  # Nombre en el sistema (único)
@@ -81,7 +73,8 @@ class Archivo(Base):
     tamano_bytes = Column(Integer)
     fecha_subida = Column(DateTime, default=datetime.utcnow)
     
-    analisis = relationship("CauseAnalysis", back_populates="archivos")  # Relación corregida
+    analisis = relationship("CauseAnalysis", back_populates="archivos")  # Relación con CauseAnalysis
+    ticket = relationship("NCTicket", back_populates="archivos")  # Relación con NCTicket
 
 
 class Resource(Base):

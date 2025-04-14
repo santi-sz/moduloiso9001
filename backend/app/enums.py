@@ -5,6 +5,7 @@ class Section(Enum):
     faena = "Faena"
     cheese =  "Producción de Quesos"
     milk = "Producción de Leche: Tambo"
+    chicken= "Producción de pollos"
     delivery = "Reparto"
     pig = "Producción de Cerdos"
     adm = "Administración"

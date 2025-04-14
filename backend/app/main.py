@@ -37,18 +37,19 @@ def get_db():
 @app.post("/create-ticket")
 def create_ticket():
     actual_date = datetime.now()
-    data = request.form['data']  # Obtener los datos del formulario
+    data = request.form.get('data')  # Obtener los datos del formulario
     images = request.files.getlist('images')  # Obtener todas las imágenes
+    #Imprimo la lista de imagenes
+    print("Lista de imagenes:", images)
+
     if not data:
         return {"error": "No se recibieron datos en la solicitud"}, 400
-    
+
     try:
         ticket_data = json.loads(data)
     except json.JSONDecodeError:
         return {"error": "Error al decodificar datos JSON"}, 400
-    
-    #print("Datos del formulario recibidos:", ticket_data)
-    # print("Número de imágenes recibidas:", len(images))
+
     try:
         ticket = NonConformity(**ticket_data)
     except ValueError as e:
@@ -74,26 +75,54 @@ def create_ticket():
             action=ticket.action,
             description=ticket.description,
         )
-        # print("Datos del ticket a insertar:", db_ticket.__dict__)
+
         try:
             db.add(db_ticket)
             db.commit()
             db.refresh(db_ticket)
 
-            # Guardar las imágenes
+            # Guardar las imágenes asociadas al ticket
             for image in images:
-                db_image = models.NCTicketImage(
-                    ticket_id=db_ticket.id,
-                    image=image.read()
-                )
-                db.add(db_image)
+                if image and allowed_file(image.filename):
+                    original_filename = secure_filename(image.filename)
+                    extension = original_filename.rsplit('.', 1)[1].lower()
+                    unique_filename = f"{uuid.uuid4().hex}.{extension}"
+
+                    # Guardar el archivo en el sistema
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                    image.save(file_path)
+
+                    # Determinar tipo de archivo
+                    if extension in ['jpg', 'jpeg', 'png', 'gif']:
+                        tipo = "imagen"
+                    else:
+                        tipo = "otro"
+
+                    # Crear registro en la base de datos
+                    new_file = models.Archivo(
+                        ticket_id=db_ticket.id,
+                        nombre=original_filename,
+                        nombre_almacenado=unique_filename,
+                        ruta_relativa=f"{app.config['UPLOAD_FOLDER']}/{unique_filename}",
+                        tipo_archivo=tipo,
+                        extension=extension,
+                        tamano_bytes=os.path.getsize(file_path)
+                    )
+
+                    db.add(new_file)
 
             db.commit()
-            ticket_id = db_ticket.id  # Asumiendo que el modelo tiene un atributo 'id'
-            return jsonify({"message": "Ticket created successfully", "ticket_id": ticket_id}), 201
+
+            return jsonify({
+                "message": "Ticket creado exitosamente",
+                "ticket_id": db_ticket.id
+            }), 201
+
         except Exception as e:
-            logging.exception("Error creating ticket: %s", e)
-            return jsonify({"error": "Error creating ticket"}), 500
+            db.rollback()
+            print(e)
+            print("Error creating ticket: %s", e)
+            return jsonify({"error": "Error al crear el ticket"}), 500
         
 @app.get("/get-tickets")
 def get_tickets():
@@ -323,13 +352,22 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx', 'xls', 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/cause-analysis/<int:analysis_id>/file', methods=['POST'])
-def upload_file(analysis_id):
+@app.route('/file/<string:type>/<int:entity_id>', methods=['POST'])
+def upload_file(type, entity_id):
+    """Subir un archivo asociado a un análisis de causa o a un ticket."""
+    if type not in ['cause_analysis', 'ticket']:
+        return jsonify({'error': 'Tipo inválido. Debe ser "cause_analysis" o "ticket".'}), 400
+
     with next(get_db()) as db:
         try:
-            analysis = db.query(models.CauseAnalysis).filter_by(id=analysis_id).first()
-            if not analysis:
-                return jsonify({"error": "Análisis no encontrado"}), 404
+            # Validar si el análisis o ticket existe
+            if type == 'cause_analysis':
+                entity = db.query(models.CauseAnalysis).filter_by(id=entity_id).first()
+            else:  # type == 'ticket'
+                entity = db.query(models.NCTicket).filter_by(id=entity_id).first()
+
+            if not entity:
+                return jsonify({"error": f"{type.replace('_', ' ').capitalize()} no encontrado"}), 404
 
             if 'file' not in request.files:
                 return jsonify({'error': 'No se encontró el archivo en la solicitud'}), 400
@@ -360,7 +398,8 @@ def upload_file(analysis_id):
 
                 # Crear registro en la base de datos
                 new_file = models.Archivo(
-                    analisis_id=analysis_id,
+                    analisis_id=entity_id if type == 'cause_analysis' else None,
+                    ticket_id=entity_id if type == 'ticket' else None,
                     nombre=original_filename,
                     nombre_almacenado=unique_filename,
                     ruta_relativa=f"{app.config['UPLOAD_FOLDER']}/{unique_filename}",
@@ -383,37 +422,46 @@ def upload_file(analysis_id):
             return jsonify({'error': 'Tipo de archivo no permitido'}), 400
         except Exception as e:
             db.rollback()
-            print(e)
             return jsonify({"error": "Error al subir el archivo"}), 500
 
 
-@app.route('/cause-analysis/<int:analysis_id>/file', methods=['GET'])
-def list_files(analysis_id):
+@app.route('/file/<string:type>/<int:entity_id>', methods=['GET'])
+def list_files(type, entity_id):
+    """Listar archivos asociados a un análisis de causa o a un ticket."""
+    if type not in ['cause_analysis', 'ticket']:
+        return jsonify({'error': 'Tipo inválido. Debe ser "cause_analysis" o "ticket".'}), 400
+
     with next(get_db()) as db:
         try:
-            analysis = db.query(models.CauseAnalysis).filter_by(id=analysis_id).first()
-            if not analysis:
-                return jsonify({"error": "Análisis no encontrado"}), 404
+            # Validar si el análisis o ticket existe
+            if type == 'cause_analysis':
+                entity = db.query(models.CauseAnalysis).filter_by(id=entity_id).first()
+            else:  # type == 'ticket'
+                entity = db.query(models.NCTicket).filter_by(id=entity_id).first()
+
+            if not entity:
+                return jsonify({"error": f"{type.replace('_', ' ').capitalize()} no encontrado"}), 404
 
             result = []
-            for archivo in analysis.archivos:
+            for archivo in entity.archivos:
                 result.append({
                     'id': archivo.id,
-                    'analisis_id': archivo.analisis_id,
                     'nombre': archivo.nombre,
                     'tipo_archivo': archivo.tipo_archivo,
                     'extension': archivo.extension,
                     'tamano_bytes': archivo.tamano_bytes,
                     'fecha_subida': archivo.fecha_subida.isoformat()
                 })
-
+            print("Archivos devueltos:")
             return jsonify(result)
         except Exception as e:
+            print(e)
             return jsonify({"error": "Error al listar los archivos"}), 500
 
 
 @app.route('/file/<int:file_id>', methods=['GET'])
 def download_file(file_id):
+    """Descargar un archivo por su ID."""
     with next(get_db()) as db:
         try:
             archivo = db.query(models.Archivo).filter_by(id=file_id).first()
@@ -435,6 +483,7 @@ def download_file(file_id):
 
 @app.route('/file/<int:file_id>', methods=['DELETE'])
 def delete_file(file_id):
+    """Eliminar un archivo por su ID."""
     with next(get_db()) as db:
         try:
             archivo = db.query(models.Archivo).filter_by(id=file_id).first()
