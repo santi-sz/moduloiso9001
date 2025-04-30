@@ -5,7 +5,7 @@ import logging
 
 # Cambiá los valores por los de tu servidor de PostgreSQL
 db_user = "postgres"
-db_password = "test123"
+db_password = "123"
 db_host = "localhost"
 db_port = "5432"
 db_name = "postgres" # Base de datos por defecto de PostgreSQL, si no creaste ninguna otra

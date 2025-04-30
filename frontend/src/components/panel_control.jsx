@@ -10,6 +10,28 @@ const PanelControl = () => {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('definicion');
   const [submitted, setSubmitted] = useState(false);
+  const [presupuestoTotal, setPresupuestoTotal] = useState(0);
+  const [planAccion, setPlanAccion] = useState([{ accion: '', responsable: '' }]);
+  const [sectionProgress, setSectionProgress] = useState({
+    definicion: false,
+    causas: false,
+    solucion: false,
+    recursos: false
+  });
+  const [progressPercentage, setProgressPercentage] = useState(0);
+
+  useEffect(() => {
+    const completedSections = Object.values(sectionProgress).filter(v => v).length;
+    const totalSections = Object.keys(sectionProgress).length;
+    setProgressPercentage((completedSections / totalSections) * 100);
+  }, [sectionProgress]);
+
+  const updateSectionProgress = (section, isComplete) => {
+    setSectionProgress(prev => ({
+      ...prev,
+      [section]: isComplete
+    }));
+  };
 
   const [formData, setFormData] = useState({
     problema: '',
@@ -23,16 +45,18 @@ const PanelControl = () => {
     solucionPropuesta: '',
     gravedad: 'media',
     costoOportunidad: '',
+    impacto: [],
+    dueño: '',
   });
   
   const [asistentes, setAsistentes] = useState(['']);
   const [recursos, setRecursos] = useState({
-    humanos: { unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '' },
-    contratistas: { unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '' },
-    materiales: { unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '' },
-    maquinarias: { unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '' },
-    inversion: { unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '' },
-    otros: { unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '' },
+    humanos: [{ unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '', descripcion: '' }],
+    contratistas: [{ unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '', descripcion: '' }],
+    materiales: [{ unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '', descripcion: '' }],
+    maquinarias: [{ unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '', descripcion: '' }],
+    inversion: [{ unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '', descripcion: '' }],
+    otros: [{ unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '', descripcion: '' }],
   });
 
   useEffect(() => {
@@ -49,7 +73,7 @@ const PanelControl = () => {
           problema: data.description || '',
           seccion: data.section || '',
           usuario: data.user_name || '',
-          fecha: formatDate(data.date) || '',
+          fecha: formatDate(data.date) || ticket.date || '',
         }));
       } catch (error) {
         console.error('Error fetching ticket details:', error);
@@ -68,7 +92,38 @@ const PanelControl = () => {
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const handleChange = (name, value) => setFormData({ ...formData, [name]: value });
+  const handleChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
+    
+    // Update section progress based on required fields being filled
+    if (name === 'definicionProblema' && value.trim() !== '') {
+      updateSectionProgress('definicion', true);
+    } else if (name === 'definicionProblema' && value.trim() === '') {
+      updateSectionProgress('definicion', false);
+    } else if (name === 'causaRaiz' && value.trim() !== '') {
+      updateSectionProgress('causas', true);
+    } else if (name === 'causaRaiz' && value.trim() === '') {
+      updateSectionProgress('causas', false);
+    } else if (name === 'solucionPropuesta' && value.trim() !== '') {
+      updateSectionProgress('solucion', true);
+    } else if (name === 'solucionPropuesta' && value.trim() === '') {
+      updateSectionProgress('solucion', false);
+    }
+  };
+
+  const checkResourcesProgress = () => {
+    let hasCompleteResource = false;
+    
+    Object.keys(recursos).forEach(tipo => {
+      recursos[tipo].forEach(recurso => {
+        if (recurso.unidad && recurso.cantidad && recurso.precio) {
+          hasCompleteResource = true;
+        }
+      });
+    });
+    
+    updateSectionProgress('recursos', hasCompleteResource);
+  };
 
   const handleAsistenteChange = (index, value) => {
     const updated = [...asistentes];
@@ -77,12 +132,59 @@ const PanelControl = () => {
     setAsistentes(updated);
   };
 
+  const calcularPresupuestoTotal = () => {
+    let total = 0;
+    
+    Object.keys(recursos).forEach(tipo => {
+      recursos[tipo].forEach(recurso => {
+        if (recurso.total && !isNaN(parseFloat(recurso.total))) {
+          total += parseFloat(recurso.total);
+        }
+      });
+    });
+    
+    setPresupuestoTotal(total);
+    return total;
+  };
+
+
   const removeAsistente = (index) => {
     if (asistentes.length > 1) {
       const updated = [...asistentes];
       updated.splice(index, 1);
       setAsistentes(updated);
     }
+  };
+
+  const handlePlanAccionChange = (index, field, value) => {
+    const updatedPlan = [...planAccion];
+    updatedPlan[index] = { ...updatedPlan[index], [field]: value };
+    
+    // Si es el último elemento y se está escribiendo, agregamos una nueva línea
+    if (index === updatedPlan.length - 1 && (value !== '' && field === 'accion')) {
+      updatedPlan.push({ accion: '', responsable: '' });
+    }
+    
+    setPlanAccion(updatedPlan);
+  };
+
+  const removePlanAccion = (index) => {
+    if (planAccion.length > 1) {
+      const updatedPlan = [...planAccion];
+      updatedPlan.splice(index, 1);
+      setPlanAccion(updatedPlan);
+    }
+  };
+
+  const handleImpactoChange = (option) => {
+    setFormData(prev => {
+      const currentImpacto = [...prev.impacto];
+      if (currentImpacto.includes(option)) {
+        return { ...prev, impacto: currentImpacto.filter(item => item !== option) };
+      } else {
+        return { ...prev, impacto: [...currentImpacto, option] };
+      }
+    });
   };
 
   const handleCausaChange = (index, value) => {
@@ -100,11 +202,46 @@ const PanelControl = () => {
     }
   };
 
-  const handleRecursoChange = (tipo, campo, valor) => {
-    setRecursos(prev => ({
-      ...prev,
-      [tipo]: { ...prev[tipo], [campo]: valor },
-    }));
+  const handleRecursoChange = (tipo, index, campo, valor) => {
+    const recursosActualizados = { ...recursos };
+    recursosActualizados[tipo][index][campo] = valor;
+    
+    // Si se cambió cantidad o precio, calculamos el total automáticamente
+    if (campo === 'cantidad' || campo === 'precio') {
+      const cantidad = recursosActualizados[tipo][index].cantidad;
+      const precio = recursosActualizados[tipo][index].precio;
+      
+      if (cantidad && precio && !isNaN(parseFloat(cantidad)) && !isNaN(parseFloat(precio))) {
+        recursosActualizados[tipo][index].total = (parseFloat(cantidad) * parseFloat(precio)).toFixed(2);
+      }
+    }
+    
+    setRecursos(recursosActualizados);
+    calcularPresupuestoTotal();
+    checkResourcesProgress(); // Check resources progress after changes
+  };
+
+  const ProgressBar = ({ percentage }) => (
+    <View style={styles.progressBarContainer}>
+      <View style={[styles.progressBar, { width: `${percentage}%` }]} />
+    </View>
+  );
+
+  const eliminarLineaRecurso = (tipo, index) => {
+    if (recursos[tipo].length > 1) {
+      const recursosActualizados = { ...recursos };
+      recursosActualizados[tipo].splice(index, 1);
+      setRecursos(recursosActualizados);
+      calcularPresupuestoTotal();
+    }
+  };
+
+  const agregarNuevaLineaRecurso = (tipo) => {
+    const recursosActualizados = { ...recursos };
+    recursosActualizados[tipo].push({ 
+      unidad: '', cantidad: '', precio: '', total: '', proveedor1: '', proveedor2: '', descripcion: '' 
+    });
+    setRecursos(recursosActualizados);
   };
 
   const handleSubmit = async () => {
@@ -117,6 +254,36 @@ const PanelControl = () => {
         return;
       }
       
+      const planAccionData = planAccion
+      .filter(item => item.accion.trim())
+      .map(item => ({
+        accion: item.accion,
+        responsable: item.responsable
+      }));
+
+      const recursosData = {};
+      let presupuestoCalculado = 0;
+      
+      Object.keys(recursos).forEach(tipo => {
+        recursosData[tipo] = recursos[tipo]
+          .filter(r => r.unidad || r.cantidad || r.precio || r.descripcion)
+          .map(r => ({
+            unidad: r.unidad,
+            cantidad: r.cantidad,
+            precio: r.precio,
+            total: r.total,
+            proveedor1: r.proveedor1,
+            proveedor2: r.proveedor2,
+            descripcion: r.descripcion
+          }));
+        
+        recursos[tipo].forEach(r => {
+          if (r.total && !isNaN(parseFloat(r.total))) {
+            presupuestoCalculado += parseFloat(r.total);
+          }
+        });
+      });
+
       const payload = {
         ticket_id: ticketId,
         problem: formData.problema,
@@ -223,7 +390,15 @@ const PanelControl = () => {
               <Text style={styles.ticketInfoValue}>{ticket?.section || 'N/A'}</Text>
             </View>
           </View>
-        </View>
+          
+          <View style={styles.sectionProgressContainer}>
+            <Text style={styles.sectionProgressLabel}>Progreso:</Text>
+            <View style={{ flex: 1 }}>
+              <ProgressBar percentage={progressPercentage} />
+            </View>
+            <Text style={styles.sectionProgressPercentage}>{Math.round(progressPercentage)}%</Text>
+          </View>
+      </View>
         
         <View style={styles.navigationContainer}>
           {renderSectionButton('definicion', 'Definición', 'file-alt')}
@@ -261,6 +436,16 @@ const PanelControl = () => {
                 />
               </View>
               
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Dueño del ticket No Conforme</Text>
+                <TextInput
+                      style={styles.input}
+                      placeholder="Nombre"
+                      value={formData.dueño}
+                      onChangeText={(val) => handleChange('dueño', val)}
+                    />  
+              </View>
+
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Asistentes <Text style={styles.requiredField}>*</Text></Text>
                 {asistentes.map((asistente, index) => (
@@ -322,6 +507,29 @@ const PanelControl = () => {
               ))}
               
               <View style={styles.formGroup}>
+                <Text style={styles.label}>Impacto</Text>
+                <View style={styles.checkboxGroup}>
+                  {['Comercial', 'Económico/Financiero', 'Productivo', 'Logística'].map((option) => (
+                    <TouchableOpacity
+                      key={option}
+                      style={styles.checkboxItem}
+                      onPress={() => handleImpactoChange(option)}
+                    >
+                      <View style={[
+                        styles.checkbox,
+                        formData.impacto.includes(option) && styles.checkboxSelected
+                      ]}>
+                        {formData.impacto.includes(option) && (
+                          <MaterialIcons name="check" size={16} color="#FFFFFF" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxText}>{option}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
                 <Text style={styles.label}>Causa Raíz <Text style={styles.requiredField}>*</Text></Text>
                 <TextInput
                   style={styles.textArea}
@@ -377,6 +585,38 @@ const PanelControl = () => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Solución Propuesta</Text>
               
+              <View style={styles.subsection}>
+              <Text style={styles.subSectionTitle}>Plan de acción</Text>
+  
+                {planAccion.map((item, index) => (
+                <View key={index} style={styles.planAccionRow}>
+                  <View style={styles.planAccionInputs}>
+                    <TextInput
+                      style={[styles.input, styles.planAccionInput]}
+                      placeholder="Acción"
+                      value={item.accion}
+                      onChangeText={(val) => handlePlanAccionChange(index, 'accion', val)}
+                    />
+                    <TextInput
+                      style={[styles.input, styles.planAccionInput]}
+                      placeholder="Responsable"
+                      value={item.responsable}
+                      onChangeText={(val) => handlePlanAccionChange(index, 'responsable', val)}
+                    />
+                  </View>
+                    
+                  {index > 0 && (
+                    <TouchableOpacity 
+                      style={styles.removeButton}
+                      onPress={() => removePlanAccion(index)}
+                    >
+                      <MaterialIcons name="remove-circle" size={24} color="#D32F2F" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+            </View>
+
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Propuesta de Solución <Text style={styles.requiredField}>*</Text></Text>
                 <TextInput
@@ -401,38 +641,105 @@ const PanelControl = () => {
               <Text style={styles.sectionTitle}>Recursos Requeridos</Text>
               
               {Object.keys(recursos).map((tipo) => (
-                <View key={tipo} style={styles.recursoContainer}>
-                  <Text style={styles.recursoTitle}>
-                    {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
-                  </Text>
-                  
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View style={styles.recursoTable}>
-                      <View style={styles.recursoHeader}>
-                        <Text style={styles.recursoHeaderCell}>Unidad</Text>
-                        <Text style={styles.recursoHeaderCell}>Cantidad</Text>
-                        <Text style={styles.recursoHeaderCell}>Precio Unit.</Text>
-                        <Text style={styles.recursoHeaderCell}>Total</Text>
-                        <Text style={styles.recursoHeaderCell}>Proveedor 1</Text>
-                        <Text style={styles.recursoHeaderCell}>Proveedor 2</Text>
-                      </View>
-                      
-                      <View style={styles.recursoRow}>
-                        {['unidad', 'cantidad', 'precio', 'total', 'proveedor1', 'proveedor2'].map((campo) => (
+              <View key={tipo} style={styles.recursoContainer}>
+                <Text style={styles.recursoTitle}>
+                  {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                </Text>
+                
+                {recursos[tipo].map((recurso, index) => (
+                  <View key={index} style={styles.recursoRowContainer}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <View style={styles.recursoTable}>
+                        {index === 0 && (
+                          <View style={styles.recursoHeader}>
+                            <Text style={styles.recursoHeaderCell}>Unidad</Text>
+                            <Text style={styles.recursoHeaderCell}>Cantidad</Text>
+                            <Text style={styles.recursoHeaderCell}>Precio Unit.</Text>
+                            <Text style={styles.recursoHeaderCell}>Total</Text>
+                            <Text style={styles.recursoHeaderCell}>Proveedor 1</Text>
+                            <Text style={styles.recursoHeaderCell}>Proveedor 2</Text>
+                            <Text style={styles.recursoHeaderCell}>Descripción</Text>
+                          </View>
+                        )}
+                        
+                        <View style={styles.recursoRow}>
                           <TextInput
-                            key={campo}
                             style={styles.recursoCell}
-                            value={recursos[tipo][campo]}
-                            onChangeText={(val) => handleRecursoChange(tipo, campo, val)}
-                            placeholder={campo === 'cantidad' || campo === 'precio' ? '0' : ''}
-                            keyboardType={campo === 'cantidad' || campo === 'precio' || campo === 'total' ? 'numeric' : 'default'}
+                            value={recurso.unidad}
+                            onChangeText={(val) => handleRecursoChange(tipo, index, 'unidad', val)}
+                            placeholder="Unidad"
                           />
-                        ))}
+                          <TextInput
+                            style={styles.recursoCell}
+                            value={recurso.cantidad}
+                            onChangeText={(val) => handleRecursoChange(tipo, index, 'cantidad', val)}
+                            placeholder="0"
+                            keyboardType="numeric"
+                          />
+                          <TextInput
+                            style={styles.recursoCell}
+                            value={recurso.precio}
+                            onChangeText={(val) => handleRecursoChange(tipo, index, 'precio', val)}
+                            placeholder="0"
+                            keyboardType="numeric"
+                          />
+                          <TextInput
+                            style={styles.recursoCell}
+                            value={recurso.total}
+                            onChangeText={(val) => handleRecursoChange(tipo, index, 'total', val)}
+                            placeholder="0"
+                            keyboardType="numeric"
+                            editable={false}
+                          />
+                          <TextInput
+                            style={styles.recursoCell}
+                            value={recurso.proveedor1}
+                            onChangeText={(val) => handleRecursoChange(tipo, index, 'proveedor1', val)}
+                            placeholder=""
+                          />
+                          <TextInput
+                            style={styles.recursoCell}
+                            value={recurso.proveedor2}
+                            onChangeText={(val) => handleRecursoChange(tipo, index, 'proveedor2', val)}
+                            placeholder=""
+                          />
+                          <TextInput
+                            style={styles.recursoCell}
+                            value={recurso.descripcion}
+                            onChangeText={(val) => handleRecursoChange(tipo, index, 'descripcion', val)}
+                            placeholder="Descripción"
+                          />
+                        </View>
                       </View>
+                    </ScrollView>
+                    
+                    <View style={styles.recursoActions}>
+                      {recursos[tipo].length > 1 && (
+                        <TouchableOpacity 
+                          style={styles.removeButtonRecurso}
+                          onPress={() => eliminarLineaRecurso(tipo, index)}
+                        >
+                          <MaterialIcons name="remove-circle" size={24} color="#D32F2F" />
+                        </TouchableOpacity>
+                      )}
                     </View>
-                  </ScrollView>
-                </View>
-              ))}
+                  </View>
+                ))}
+                
+                <TouchableOpacity 
+                  style={styles.addButton}
+                  onPress={() => agregarNuevaLineaRecurso(tipo)}
+                >
+                  <MaterialIcons name="add-circle" size={24} color="#1C7D4A" />
+                  <Text style={styles.addButtonText}>Agregar línea</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+
+            <View style={styles.presupuestoContainer}>
+              <Text style={styles.presupuestoLabel}>Presupuesto Total:</Text>
+              <Text style={styles.presupuestoTotal}>${presupuestoTotal.toFixed(2)}</Text>
+            </View>
             </View>
           )}
         </ScrollView>
@@ -753,6 +1060,131 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
+  checkboxGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  checkboxItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+    marginBottom: 8,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F7FA',
+  },
+  checkboxSelected: {
+    backgroundColor: '#1C7D4A',
+    borderColor: '#1C7D4A',
+  },
+  checkboxText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#333333',
+  },
+  
+  // Estilos para el Plan de Acción
+  subsection: {
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  planAccionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  planAccionInputs: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  planAccionInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  
+  // Estilos para los Recursos dinámicos
+  recursoRowContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  recursoActions: {
+    justifyContent: 'center',
+    paddingLeft: 8,
+  },
+  removeButtonRecurso: {
+    padding: 4,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  addButtonText: {
+    marginLeft: 8,
+    color: '#1C7D4A',
+    fontWeight: '500',
+  },
+  presupuestoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#F5F7FA',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  presupuestoLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginRight: 12,
+  },
+  presupuestoTotal: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1C7D4A',
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    width: '100%',
+    marginTop: 4,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#1C7D4A',
+    borderRadius: 4,
+  },
+  sectionProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sectionProgressLabel: {
+    fontSize: 12,
+    color: '#757575',
+    marginRight: 8,
+  },
+  sectionProgressPercentage: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#1C7D4A',
+    marginLeft: 8,
+  },
+
 });
 
 export default PanelControl;
